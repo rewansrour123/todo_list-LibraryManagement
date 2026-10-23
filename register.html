@@ -1,0 +1,188 @@
+`
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Register</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Dark Mode Button -->
+        <div class="header-actions">
+            <button type="button" class="theme-toggle" id="themeToggle">
+                🌙 Dark Mode
+            </button>
+        </div>
+
+        <h1>Create Account</h1>
+
+        <!-- Server-side validation messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <p class="{{ category }}" role="alert">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endwith %}
+
+        <!-- Registration Form -->
+        <form action="/register" method="POST" id="registerForm">
+
+            <div class="form-group">
+
+                <label for="name">Name</label>
+
+                <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    maxlength="100"
+                    autocomplete="name"
+                >
+
+                <p id="nameError" class="error"></p>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="email">Email</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    autocomplete="email"
+                >
+
+                <p id="emailError" class="error"></p>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    autocomplete="new-password"
+                >
+
+                <p id="passwordError" class="error"></p>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="confirm_password">Confirm Password</label>
+
+                <input
+                    type="password"
+                    name="confirm_password"
+                    id="confirm_password"
+                    autocomplete="new-password"
+                >
+
+                <p id="confirmPasswordError" class="error"></p>
+
+            </div>
+
+            <button type="submit" class="main-button">
+                Register
+            </button>
+
+        </form>
+
+        <a href="/login" class="auth-link">
+            Already have an account? Login
+        </a>
+
+    </div>
+
+    <!-- Registration Form Validation -->
+    <script>
+        const registerForm = document.getElementById("registerForm");
+
+        registerForm.addEventListener("submit", function(event) {
+
+            // Read form values
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const confirmPassword =
+                document.getElementById("confirm_password").value;
+
+            // Get error elements
+            const nameError = document.getElementById("nameError");
+            const emailError = document.getElementById("emailError");
+            const passwordError = document.getElementById("passwordError");
+            const confirmPasswordError =
+                document.getElementById("confirmPasswordError");
+
+            // Clear previous errors
+            nameError.textContent = "";
+            emailError.textContent = "";
+            passwordError.textContent = "";
+            confirmPasswordError.textContent = "";
+
+            let valid = true;
+
+            // Validate name
+            if (name === "") {
+                nameError.textContent = "Name is required";
+                valid = false;
+            } else if (name.length > 100) {
+                nameError.textContent = "Name is too long";
+                valid = false;
+            }
+
+            // Validate email
+            if (email === "") {
+                emailError.textContent = "Email is required";
+                valid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                emailError.textContent = "Please enter a valid email";
+                valid = false;
+            }
+
+            // Validate password
+            if (password.trim() === "") {
+                passwordError.textContent = "Password is required";
+                valid = false;
+            }
+
+            // Validate confirmation
+            if (confirmPassword.trim() === "") {
+                confirmPasswordError.textContent =
+                    "Confirm password is required";
+                valid = false;
+            } else if (password !== confirmPassword) {
+                confirmPasswordError.textContent =
+                    "Passwords do not match";
+                valid = false;
+            }
+
+            // Stop submission if invalid
+            if (!valid) {
+                event.preventDefault();
+            }
+
+        });
+    </script>
+
+    <!-- Shared Dark Mode Script -->
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Dark Mode Button -->
+        <div class="header-actions">
+            <button type="button" class="theme-toggle" id="themeToggle">
+                🌙 Dark Mode
+            </button>
+        </div>
+
+        <h1>Login</h1>
+
+        <!-- Server-side validation messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <p class="{{ category }}" role="alert">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endwith %}
+
+        <!-- Login Form -->
+        <form action="/login" method="POST" id="loginForm">
+
+            <div class="form-group">
+
+                <label for="email">Email</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    autocomplete="email"
+                >
+
+                <p id="emailError" class="error"></p>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    autocomplete="current-password"
+                >
+
+                <p id="passwordError" class="error"></p>
+
+            </div>
+
+            <button type="submit" class="main-button">
+                Login
+            </button>
+
+        </form>
+
+        <a href="/register" class="auth-link">
+            Create an account
+        </a>
+
+    </div>
+
+    <!-- Login Form Validation -->
+    <script>
+        const loginForm = document.getElementById("loginForm");
+
+        loginForm.addEventListener("submit", function(event) {
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const emailError = document.getElementById("emailError");
+            const passwordError = document.getElementById("passwordError");
+
+            emailError.textContent = "";
+            passwordError.textContent = "";
+
+            let valid = true;
+
+            // Validate email
+            if (email === "") {
+                emailError.textContent = "Email is required";
+                valid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                emailError.textContent = "Please enter a valid email";
+                valid = false;
+            }
+
+            // Validate password
+            if (password.trim() === "") {
+                passwordError.textContent = "Password is required";
+                valid = false;
+            }
+
+            if (!valid) {
+                event.preventDefault();
+            }
+
+        });
+    </script>
+
+    <!-- Shared Dark Mode Script -->
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+
+</body>
+</html>

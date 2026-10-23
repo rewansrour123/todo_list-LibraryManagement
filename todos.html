@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>To-Do List</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="container">
+       
+      <!-- Display Flask flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+            <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+        <!-- Header -->
+        <div class="todo-header">
+
+            <div>
+                <h1>To-Do List</h1>
+                <p>Hi, {{ user_name }}</p>
+            </div>
+
+            <div class="header-actions">
+
+                <button
+                    type="button"
+                    class="theme-toggle"
+                    id="themeToggle"
+                >
+                    🌙 Dark Mode
+                </button>
+                <a href="{{ url_for('library') }}">
+                     Library Management
+                </a>
+                <a href="{{ url_for('logout') }}">
+                    Log out
+                </a>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <!-- Add New To-Do -->
+        <h2>Add a To-Do</h2>
+
+        <form
+            action="{{ url_for('add_todo') }}"
+            method="POST"
+            id="addTodoForm"
+        >
+
+            <div class="form-group">
+
+                <label for="title">Task</label>
+
+                <input
+                    type="text"
+                    name="title"
+                    id="title"
+                    placeholder="What needs to be done?"
+                    maxlength="200"
+                    required
+                >
+
+                <p id="titleError" class="error"></p>
+
+            </div>
+
+            <button type="submit" class="main-button">
+                Add
+            </button>
+
+        </form>
+
+        <hr>
+
+        <!-- Tasks -->
+        <h2>Your Tasks</h2>
+
+        {% if todos %}
+
+            {% for todo in todos %}
+
+                <div class="todo-item">
+
+                    <!-- Task title -->
+                    <div class="todo-title">
+
+                        {% if todo.is_done == 1 %}
+                            <s>{{ todo.title }}</s>
+                        {% else %}
+                            {{ todo.title }}
+                        {% endif %}
+
+                    </div>
+
+                    <!-- Done / Undo / Delete -->
+                    <div class="todo-actions">
+
+                        <form
+                            action="{{ url_for(
+                                'toggle_todo',
+                                todo_id=todo.todo_id
+                            ) }}"
+                            method="POST"
+                        >
+
+                            {% if todo.is_done == 1 %}
+                                <button type="submit">Undo</button>
+                            {% else %}
+                                <button type="submit">Done</button>
+                            {% endif %}
+
+                        </form>
+
+                        <form
+                            action="{{ url_for(
+                                'delete_todo',
+                                todo_id=todo.todo_id
+                            ) }}"
+                            method="POST"
+                            onsubmit="return confirm(
+                                'Are you sure you want to delete this task?'
+                            );"
+                        >
+
+                            <button type="submit">Delete</button>
+
+                        </form>
+
+                    </div>
+
+                    <!-- Edit Task -->
+                    <form
+                        action="{{ url_for(
+                            'edit_todo',
+                            todo_id=todo.todo_id
+                        ) }}"
+                        method="POST"
+                        class="edit-form"
+                    >
+
+                        <input
+                            type="text"
+                            name="title"
+                            value="{{ todo.title }}"
+                            maxlength="200"
+                            required
+                        >
+
+                        <button type="submit">Save</button>
+
+                    </form>
+
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <!-- Empty State -->
+            <div class="empty-state">
+
+                <p>You don't have any to-dos yet.</p>
+                <p>Add your first task above!</p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- Browser Validation -->
+    <script>
+
+        const addTodoForm =
+            document.getElementById("addTodoForm");
+
+        addTodoForm.addEventListener("submit", function(event) {
+
+            const title =
+                document.getElementById("title").value.trim();
+
+            const titleError =
+                document.getElementById("titleError");
+
+            titleError.textContent = "";
+
+            if (title === "") {
+                titleError.textContent = "Title is required";
+                event.preventDefault();
+                return;
+            }
+
+            if (title.length > 200) {
+                titleError.textContent = "Title is too long";
+                event.preventDefault();
+            }
+
+        });
+
+    </script>
+
+    <!-- Shared Dark Mode Script -->
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+
+</body>
+</html>

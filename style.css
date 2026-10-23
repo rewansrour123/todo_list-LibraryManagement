@@ -1,0 +1,453 @@
+/* --------------------------------------------------
+   General Page Settings
+-------------------------------------------------- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    color: #222;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+
+/* --------------------------------------------------
+   Main Container
+-------------------------------------------------- */
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    color: #222;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+
+/* --------------------------------------------------
+   Headings
+-------------------------------------------------- */
+
+h1 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+h2 {
+    margin-top: 25px;
+}
+
+
+/* --------------------------------------------------
+   Form
+-------------------------------------------------- */
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: bold;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    font-size: 15px;
+    background-color: #ffffff;
+    color: #222;
+    transition: background-color 0.3s ease,
+                color 0.3s ease,
+                border-color 0.3s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #555;
+}
+
+
+/* --------------------------------------------------
+   Buttons
+-------------------------------------------------- */
+
+button {
+    border: none;
+    padding: 10px 16px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    background-color: #333;
+    color: #ffffff;
+    transition: background-color 0.3s ease,
+                color 0.3s ease,
+                border-color 0.3s ease;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+.main-button {
+    width: 100%;
+    margin-top: 5px;
+}
+
+
+/* --------------------------------------------------
+   Links
+-------------------------------------------------- */
+
+a {
+    color: #1558b0;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.auth-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+}
+
+
+/* --------------------------------------------------
+   Validation Error Messages
+-------------------------------------------------- */
+
+.error {
+    color: #d93025;
+    margin: 5px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* Server-side flash messages */
+
+p[role="alert"] {
+    color: #b42318;
+    background-color: #fef3f2;
+    border: 1px solid #fecdca;
+    border-radius: 7px;
+    padding: 10px 12px;
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+
+/* --------------------------------------------------
+   Todo Header
+-------------------------------------------------- */
+
+.todo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.todo-header h1 {
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+
+/* --------------------------------------------------
+   Todo Item
+-------------------------------------------------- */
+
+.todo-item {
+    padding: 15px;
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fafafa;
+    color: #222;
+    transition: background-color 0.3s ease,
+                color 0.3s ease,
+                border-color 0.3s ease;
+}
+
+.todo-title {
+    font-size: 17px;
+    margin-bottom: 12px;
+    word-break: break-word;
+}
+
+
+/* --------------------------------------------------
+   Todo Actions
+-------------------------------------------------- */
+
+.todo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.todo-actions form {
+    margin: 0;
+}
+
+.edit-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.edit-form input {
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* --------------------------------------------------
+   Empty State
+-------------------------------------------------- */
+
+.empty-state {
+    text-align: center;
+    padding: 25px;
+    border: 1px dashed #bbb;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #333;
+    transition: background-color 0.3s ease,
+                color 0.3s ease,
+                border-color 0.3s ease;
+}
+
+
+/* --------------------------------------------------
+   Dark Mode - ALL PAGES
+-------------------------------------------------- */
+
+body.dark-mode {
+    background-color: #121826;
+    color: #e5e7eb;
+}
+
+/* Main container */
+
+body.dark-mode .container {
+    background-color: #1e293b;
+    color: #e5e7eb;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Headings, paragraphs and labels */
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode p,
+body.dark-mode label,
+body.dark-mode .todo-title {
+    color: #e5e7eb;
+}
+
+/* Horizontal lines */
+
+body.dark-mode hr {
+    border: 0;
+    border-top: 1px solid #475569;
+}
+
+/* Inputs */
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background-color: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #475569;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: #94a3b8;
+}
+
+body.dark-mode input:focus,
+body.dark-mode textarea:focus,
+body.dark-mode select:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 1px;
+    border-color: #60a5fa;
+}
+
+/* Buttons */
+
+body.dark-mode button {
+    background-color: #334155;
+    color: #f8fafc;
+    border: 1px solid #475569;
+}
+
+body.dark-mode button:hover {
+    background-color: #475569;
+    opacity: 1;
+}
+
+/* Main buttons */
+
+body.dark-mode .main-button {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+body.dark-mode .main-button:hover {
+    background-color: #1d4ed8;
+}
+
+/* Links */
+
+body.dark-mode a {
+    color: #93c5fd;
+}
+
+body.dark-mode a:hover {
+    color: #bfdbfe;
+}
+
+/* Todo items */
+
+body.dark-mode .todo-item {
+    background-color: #273449;
+    color: #e5e7eb;
+    border-color: #475569;
+}
+
+/* Empty state */
+
+body.dark-mode .empty-state {
+    background-color: #273449;
+    color: #cbd5e1;
+    border-color: #475569;
+}
+
+body.dark-mode .empty-state p {
+    color: #cbd5e1;
+}
+
+/* Validation errors */
+
+body.dark-mode .error {
+    color: #fca5a5;
+}
+
+/* Server-side flash messages */
+
+body.dark-mode p[role="alert"] {
+    color: #fecaca;
+    background-color: #451a1a;
+    border-color: #7f1d1d;
+}
+
+/* Success messages, if used */
+
+body.dark-mode .success {
+    color: #86efac;
+}
+
+/* Theme toggle */
+
+body.dark-mode .theme-toggle {
+    background-color: #334155;
+    color: #f8fafc;
+    border-color: #64748b;
+}
+
+
+/* --------------------------------------------------
+   Mobile Responsive
+-------------------------------------------------- */
+
+@media (max-width: 500px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        margin: 15px auto;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .todo-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .todo-header h1 {
+        text-align: center;
+    }
+
+    .header-actions {
+        justify-content: center;
+    }
+
+    .edit-form {
+        flex-direction: column;
+    }
+
+    .edit-form button {
+        width: 100%;
+    }
+
+    .todo-actions {
+        flex-direction: column;
+    }
+
+    .todo-actions button {
+        width: 100%;
+    }
+
+    input,
+    textarea,
+    select {
+        font-size: 16px;
+    }
+
+    .error,
+    p[role="alert"] {
+        font-size: 13px;
+    }
+}

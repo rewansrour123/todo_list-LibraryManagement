@@ -1,0 +1,372 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .library-table {
+            width: 100%;
+            text-align: left;
+            border-collapse: collapse;
+        }
+
+        .library-table th,
+        .library-table td {
+            padding: 10px;
+            border-bottom: 1px solid #8884;
+            vertical-align: middle;
+        }
+
+        .library-image {
+            width: 85px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .author-image {
+            width: 75px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .image-placeholder {
+            display: inline-flex;
+            width: 75px;
+            height: 75px;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #888;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .library-form {
+            max-width: 500px;
+        }
+
+        .library-form input,
+        .library-form select {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 6px 0 14px;
+        }
+
+        .library-form input[type="file"] {
+            padding: 8px;
+        }
+
+        .action-form {
+            margin-top: 10px;
+        }
+
+        .edit-panel {
+            min-width: 220px;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container" style="max-width: 1100px;">
+
+    <div class="todo-header">
+        <h1>Library</h1>
+
+        <div class="header-actions">
+            <button type="button" class="theme-toggle"
+                    id="themeToggle">🌙 Dark Mode</button>
+
+            <a href="{{ url_for('home') }}">To-Do List</a>
+            <a href="{{ url_for('logout') }}">Log out</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p class="{{ category }}" role="alert">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <hr>
+
+    <!-- ADD BOOK -->
+    <h2>Add Book</h2>
+
+    <form class="library-form"
+          action="{{ url_for('add_book') }}"
+          method="POST"
+          enctype="multipart/form-data">
+
+        <label>Book Title</label>
+        <input type="text" name="title" maxlength="200" required>
+
+        <label>Price</label>
+        <input type="number" name="price" min="0"
+               step="0.01" required>
+
+        <label>Author</label>
+        <select name="author_id" required>
+            <option value="">Select Author</option>
+            {% for author in authors %}
+                <option value="{{ author.author_id }}">
+                    {{ author.name }} (ID: {{ author.author_id }})
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Book Cover (optional)</label>
+        <input type="file" name="cover_image"
+               accept=".png,.jpg,.jpeg,.webp">
+
+        <button type="submit">Add Book</button>
+    </form>
+
+    <hr>
+
+    <!-- BOOKS TABLE -->
+    <h2>Books</h2>
+
+    {% if books %}
+    <div style="overflow-x:auto;">
+        <table class="library-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cover</th>
+                    <th>Title</th>
+                    <th>Price</th>
+                    <th>Author ID</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for book in books %}
+                <tr>
+                    <td>{{ book.book_id }}</td>
+
+                    <td>
+                        {% if book.cover_image %}
+                            <img
+                                class="library-image"
+                                src="{{ url_for('static', filename=book.cover_image) }}"
+                                alt="Cover of {{ book.title }}">
+                        {% else %}
+                            <span class="image-placeholder">No cover</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.price }}</td>
+                    <td>{{ book.author_id }}</td>
+
+                    <td>
+                        <details>
+                            <summary>Edit</summary>
+
+                            <div class="edit-panel">
+                                <form
+                                    action="{{ url_for('edit_book', book_id=book.book_id) }}"
+                                    method="POST"
+                                    enctype="multipart/form-data">
+
+                                    <label>Title</label>
+                                    <input type="text"
+                                           name="title"
+                                           value="{{ book.title }}"
+                                           maxlength="200"
+                                           required>
+
+                                    <label>Price</label>
+                                    <input type="number"
+                                           name="price"
+                                           value="{{ book.price }}"
+                                           min="0"
+                                           step="0.01"
+                                           required>
+
+                                    <label>Author</label>
+                                    <select name="author_id" required>
+                                        {% for author in authors %}
+                                            <option
+                                                value="{{ author.author_id }}"
+                                                {% if author.author_id == book.author_id %}
+                                                    selected
+                                                {% endif %}>
+                                                {{ author.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+
+                                    {% if book.cover_image %}
+                                        <p>Current cover:</p>
+                                        <img
+                                            class="library-image"
+                                            src="{{ url_for('static', filename=book.cover_image) }}"
+                                            alt="Current book cover">
+                                    {% endif %}
+
+                                    <label>Change Cover (optional)</label>
+                                    <input type="file"
+                                           name="cover_image"
+                                           accept=".png,.jpg,.jpeg,.webp">
+
+                                    <button type="submit">
+                                        Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </details>
+
+                        <form class="action-form"
+                              action="{{ url_for('delete_book', book_id=book.book_id) }}"
+                              method="POST"
+                              onsubmit="return confirm('Delete this book?');">
+
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p>No books found.</p>
+    {% endif %}
+
+    <hr>
+
+    <!-- ADD AUTHOR -->
+    <h2>Add Author</h2>
+
+    <form class="library-form"
+          action="{{ url_for('add_author') }}"
+          method="POST"
+          enctype="multipart/form-data">
+
+        <label>Author Name</label>
+        <input type="text" name="name" maxlength="100" required>
+
+        <label>Country</label>
+        <input type="text" name="country" maxlength="100">
+
+        <label>Author Photo (optional)</label>
+        <input type="file" name="photo"
+               accept=".png,.jpg,.jpeg,.webp">
+
+        <button type="submit">Add Author</button>
+    </form>
+
+    <hr>
+
+    <!-- AUTHORS TABLE -->
+    <h2>Authors</h2>
+
+    {% if authors %}
+    <div style="overflow-x:auto;">
+        <table class="library-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Photo</th>
+                    <th>Name</th>
+                    <th>Country</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for author in authors %}
+                <tr>
+                    <td>{{ author.author_id }}</td>
+
+                    <td>
+                        {% if author.photo %}
+                            <img
+                                class="author-image"
+                                src="{{ url_for('static', filename=author.photo) }}"
+                                alt="Photo of {{ author.name }}">
+                        {% else %}
+                            <span class="image-placeholder">No photo</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ author.name }}</td>
+                    <td>{{ author.country or '' }}</td>
+
+                    <td>
+                        <details>
+                            <summary>Edit</summary>
+
+                            <div class="edit-panel">
+                                <form
+                                    action="{{ url_for('edit_author', author_id=author.author_id) }}"
+                                    method="POST"
+                                    enctype="multipart/form-data">
+
+                                    <label>Name</label>
+                                    <input type="text"
+                                           name="name"
+                                           value="{{ author.name }}"
+                                           maxlength="100"
+                                           required>
+
+                                    <label>Country</label>
+                                    <input type="text"
+                                           name="country"
+                                           value="{{ author.country or '' }}"
+                                           maxlength="100">
+
+                                    {% if author.photo %}
+                                        <p>Current photo:</p>
+                                        <img
+                                            class="author-image"
+                                            src="{{ url_for('static', filename=author.photo) }}"
+                                            alt="Current author photo">
+                                    {% endif %}
+
+                                    <label>Change Photo (optional)</label>
+                                    <input type="file"
+                                           name="photo"
+                                           accept=".png,.jpg,.jpeg,.webp">
+
+                                    <button type="submit">
+                                        Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </details>
+
+                        <form class="action-form"
+                              action="{{ url_for('delete_author', author_id=author.author_id) }}"
+                              method="POST"
+                              onsubmit="return confirm('Delete this author and all their books?');">
+
+                            <button type="submit">Delete Author</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p>No authors found.</p>
+    {% endif %}
+
+</div>
+
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+
+</body>
+</html>
