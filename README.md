@@ -9,7 +9,9 @@ This project extends Lab 2 by keeping the existing user authentication and perso
 ## 👥 1. Team Members
 
 | Name | Student ID | Responsibilities |
-| Rewan Mahmoud Mohamed | 2304098 | Database Design, Flask Backend, Authentication, To-Do List, and Library Management |
+
+
+Rewan Mahmoud Mohamed | 2304098 | Database Design, Flask Backend, Authentication, To-Do List, and Library Management |
 
 ---
 
