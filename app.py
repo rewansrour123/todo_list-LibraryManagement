@@ -113,7 +113,7 @@ def get_library_connection():
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        database="library",
+        database="libraryy",
         cursorclass=pymysql.cursors.DictCursor
     )
 
@@ -496,7 +496,6 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-
 # =================================================
 # LIBRARY: SHOW BOOKS AND AUTHORS
 # =================================================
@@ -510,20 +509,16 @@ def library():
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT book_id, title, price, author_id, cover_image
+            cursor.execute("""
+                SELECT book_id, title, price, author_id, image
                 FROM BOOK
-                """
-            )
+            """)
             books = cursor.fetchall()
 
-            cursor.execute(
-                """
-                SELECT author_id, name, country, photo
+            cursor.execute("""
+                SELECT author_id, name, country, image
                 FROM AUTHOR
-                """
-            )
+            """)
             authors = cursor.fetchall()
 
         return render_template(
@@ -537,7 +532,7 @@ def library():
 
 
 # =================================================
-# ADD BOOK WITH COVER
+# ADD BOOK
 # =================================================
 
 @app.route("/library/book/add", methods=["POST"])
@@ -548,14 +543,14 @@ def add_book():
     title = request.form.get("title", "").strip()
     price_text = request.form.get("price", "").strip()
     author_text = request.form.get("author_id", "").strip()
-    image = request.files.get("cover_image")
+    image = request.files.get("image")
 
     if not title or not price_text or not author_text:
         flash("Title, price and author are required", "error")
         return redirect(url_for("library"))
 
-    image_path = None
     connection = None
+    image_path = None
 
     try:
         price = float(price_text)
@@ -569,32 +564,44 @@ def add_book():
         connection = get_library_connection()
 
         with connection.cursor() as cursor:
+            # Check that the author exists
             cursor.execute(
-                """
-                INSERT INTO BOOK
-                (title, price, author_id, cover_image)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (title, price, author_id, image_path)
+                "SELECT author_id FROM AUTHOR WHERE author_id = %s",
+                (author_id,)
             )
+
+            author = cursor.fetchone()
+
+            if author is None:
+                if image_path:
+                    delete_image(image_path)
+
+                flash("Author does not exist", "error")
+                return redirect(url_for("library"))
+
+            cursor.execute("""
+                INSERT INTO BOOK (title, price, author_id, image)
+                VALUES (%s, %s, %s, %s)
+            """, (title, price, author_id, image_path))
 
         connection.commit()
 
-    except ValueError as error:
+    except (ValueError, TypeError) as error:
         if image_path:
             delete_image(image_path)
 
-        flash(str(error), "error")
+        flash(str(error) or "Enter valid book information", "error")
         return redirect(url_for("library"))
 
-    except pymysql.MySQLError:
+    except pymysql.MySQLError as error:
         if connection:
             connection.rollback()
 
         if image_path:
             delete_image(image_path)
 
-        flash("Could not add book. Check the author ID.", "error")
+        print("ADD BOOK DATABASE ERROR:", error)
+        flash("Could not add book. Check the database and author ID.", "error")
         return redirect(url_for("library"))
 
     finally:
@@ -606,7 +613,7 @@ def add_book():
 
 
 # =================================================
-# EDIT BOOK AND OPTIONAL COVER
+# EDIT BOOK
 # =================================================
 
 @app.route("/library/book/edit/<int:book_id>", methods=["POST"])
@@ -617,7 +624,7 @@ def edit_book(book_id):
     title = request.form.get("title", "").strip()
     price_text = request.form.get("price", "").strip()
     author_text = request.form.get("author_id", "").strip()
-    image = request.files.get("cover_image")
+    image = request.files.get("image")
 
     if not title or not price_text or not author_text:
         flash("Title, price and author are required", "error")
@@ -638,7 +645,7 @@ def edit_book(book_id):
 
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT cover_image FROM BOOK WHERE book_id = %s",
+                "SELECT image FROM BOOK WHERE book_id = %s",
                 (book_id,)
             )
             book = cursor.fetchone()
@@ -647,100 +654,68 @@ def edit_book(book_id):
                 flash("Book not found", "error")
                 return redirect(url_for("library"))
 
-            old_image_path = book["cover_image"]
+            cursor.execute(
+                "SELECT author_id FROM AUTHOR WHERE author_id = %s",
+                (author_id,)
+            )
 
+            author = cursor.fetchone()
+
+            if author is None:
+                flash("Author does not exist", "error")
+                return redirect(url_for("library"))
+
+            old_image_path = book["image"]
+
+            # Keep the old image unless a new one is uploaded
             if image and image.filename:
                 new_image_path = save_image(image)
                 image_path = new_image_path
             else:
                 image_path = old_image_path
 
-            cursor.execute(
-                """
+            cursor.execute("""
                 UPDATE BOOK
-                SET title = %s, price = %s, author_id = %s,
-                    cover_image = %s
+                SET title = %s,
+                    price = %s,
+                    author_id = %s,
+                    image = %s
                 WHERE book_id = %s
-                """,
-                (title, price, author_id, image_path, book_id)
-            )
+            """, (title, price, author_id, image_path, book_id))
 
         connection.commit()
 
-        if new_image_path and old_image_path:
-            delete_image(old_image_path)
-
-    except ValueError as error:
+    except (ValueError, TypeError) as error:
         if new_image_path:
             delete_image(new_image_path)
 
-        flash(str(error), "error")
+        flash(str(error) or "Enter valid book information", "error")
         return redirect(url_for("library"))
 
-    except pymysql.MySQLError:
+    except pymysql.MySQLError as error:
         if connection:
             connection.rollback()
 
         if new_image_path:
             delete_image(new_image_path)
 
-        flash("Could not update book. Check the author ID.", "error")
+        print("EDIT BOOK DATABASE ERROR:", error)
+        flash("Could not update book. Check the database and author ID.", "error")
         return redirect(url_for("library"))
 
     finally:
         if connection:
             connection.close()
 
+    if new_image_path and old_image_path:
+        delete_image(old_image_path)
+
     flash("Book updated successfully", "success")
     return redirect(url_for("library"))
 
 
 # =================================================
-# DELETE BOOK AND ITS COVER
-# =================================================
-
-@app.route("/library/book/delete/<int:book_id>", methods=["POST"])
-def delete_book(book_id):
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    connection = get_library_connection()
-    image_path = None
-
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT cover_image FROM BOOK WHERE book_id = %s",
-                (book_id,)
-            )
-            book = cursor.fetchone()
-
-            if book:
-                image_path = book["cover_image"]
-
-            cursor.execute(
-                "DELETE FROM BOOK WHERE book_id = %s",
-                (book_id,)
-            )
-
-        connection.commit()
-
-    except Exception:
-        connection.rollback()
-        raise
-
-    finally:
-        connection.close()
-
-    if image_path:
-        delete_image(image_path)
-
-    flash("Book deleted successfully", "success")
-    return redirect(url_for("library"))
-
-
-# =================================================
-# ADD AUTHOR WITH PHOTO
+# ADD AUTHOR
 # =================================================
 
 @app.route("/library/author/add", methods=["POST"])
@@ -750,14 +725,14 @@ def add_author():
 
     name = request.form.get("name", "").strip()
     country = request.form.get("country", "").strip()
-    image = request.files.get("photo")
+    image = request.files.get("image")
 
     if not name:
         flash("Author name is required", "error")
         return redirect(url_for("library"))
 
-    image_path = None
     connection = None
+    image_path = None
 
     try:
         image_path = save_image(image)
@@ -765,13 +740,10 @@ def add_author():
         connection = get_library_connection()
 
         with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                INSERT INTO AUTHOR (name, country, photo)
+            cursor.execute("""
+                INSERT INTO AUTHOR (name, country, image)
                 VALUES (%s, %s, %s)
-                """,
-                (name, country or None, image_path)
-            )
+            """, (name, country or None, image_path))
 
         connection.commit()
 
@@ -782,14 +754,15 @@ def add_author():
         flash(str(error), "error")
         return redirect(url_for("library"))
 
-    except pymysql.MySQLError:
+    except pymysql.MySQLError as error:
         if connection:
             connection.rollback()
 
         if image_path:
             delete_image(image_path)
 
-        flash("Could not add author.", "error")
+        print("ADD AUTHOR DATABASE ERROR:", error)
+        flash("Could not add author. Check the AUTHOR table structure.", "error")
         return redirect(url_for("library"))
 
     finally:
@@ -801,7 +774,7 @@ def add_author():
 
 
 # =================================================
-# EDIT AUTHOR AND OPTIONAL PHOTO
+# EDIT AUTHOR
 # =================================================
 
 @app.route("/library/author/edit/<int:author_id>", methods=["POST"])
@@ -811,7 +784,7 @@ def edit_author(author_id):
 
     name = request.form.get("name", "").strip()
     country = request.form.get("country", "").strip()
-    image = request.files.get("photo")
+    image = request.files.get("image")
 
     if not name:
         flash("Author name is required", "error")
@@ -826,16 +799,17 @@ def edit_author(author_id):
 
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT photo FROM AUTHOR WHERE author_id = %s",
+                "SELECT image FROM AUTHOR WHERE author_id = %s",
                 (author_id,)
             )
+
             author = cursor.fetchone()
 
             if author is None:
                 flash("Author not found", "error")
                 return redirect(url_for("library"))
 
-            old_image_path = author["photo"]
+            old_image_path = author["image"]
 
             if image and image.filename:
                 new_image_path = save_image(image)
@@ -843,19 +817,15 @@ def edit_author(author_id):
             else:
                 image_path = old_image_path
 
-            cursor.execute(
-                """
+            cursor.execute("""
                 UPDATE AUTHOR
-                SET name = %s, country = %s, photo = %s
+                SET name = %s,
+                    country = %s,
+                    image = %s
                 WHERE author_id = %s
-                """,
-                (name, country or None, image_path, author_id)
-            )
+            """, (name, country or None, image_path, author_id))
 
         connection.commit()
-
-        if new_image_path and old_image_path:
-            delete_image(old_image_path)
 
     except ValueError as error:
         if new_image_path:
@@ -864,26 +834,85 @@ def edit_author(author_id):
         flash(str(error), "error")
         return redirect(url_for("library"))
 
-    except pymysql.MySQLError:
+    except pymysql.MySQLError as error:
         if connection:
             connection.rollback()
 
         if new_image_path:
             delete_image(new_image_path)
 
-        flash("Could not update author.", "error")
+        print("EDIT AUTHOR DATABASE ERROR:", error)
+        flash("Could not update author. Check the AUTHOR table structure.", "error")
         return redirect(url_for("library"))
 
     finally:
         if connection:
             connection.close()
 
+    if new_image_path and old_image_path:
+        delete_image(old_image_path)
+
     flash("Author updated successfully", "success")
     return redirect(url_for("library"))
 
 
+
 # =================================================
-# DELETE AUTHOR, BOOKS AND THEIR IMAGES
+# DELETE BOOK
+# =================================================
+
+@app.route("/library/book/delete/<int:book_id>", methods=["POST"])
+def delete_book(book_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = None
+    image_path = None
+
+    try:
+        connection = get_library_connection()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT image FROM BOOK WHERE book_id = %s",
+                (book_id,)
+            )
+            book = cursor.fetchone()
+
+            if book is None:
+                flash("Book not found", "error")
+                return redirect(url_for("library"))
+
+            image_path = book["image"]
+
+            cursor.execute(
+                "DELETE FROM BOOK WHERE book_id = %s",
+                (book_id,)
+            )
+
+        connection.commit()
+
+    except pymysql.MySQLError as error:
+        if connection:
+            connection.rollback()
+
+        print("DELETE BOOK DATABASE ERROR:", error)
+        flash("Could not delete book", "error")
+        return redirect(url_for("library"))
+
+    finally:
+        if connection:
+            connection.close()
+
+    if image_path:
+        delete_image(image_path)
+
+    flash("Book deleted successfully", "success")
+    return redirect(url_for("library"))
+
+
+# =================================================
+# DELETE AUTHOR
 # =================================================
 
 @app.route("/library/author/delete/<int:author_id>", methods=["POST"])
@@ -891,39 +920,45 @@ def delete_author(author_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    connection = get_library_connection()
-    book_images = []
-    author_image = None
+    connection = None
+    image_paths = []
 
     try:
+        connection = get_library_connection()
+
         with connection.cursor() as cursor:
+            # Get the author's image
             cursor.execute(
-                "SELECT photo FROM AUTHOR WHERE author_id = %s",
+                "SELECT image FROM AUTHOR WHERE author_id = %s",
                 (author_id,)
             )
             author = cursor.fetchone()
 
-            if author:
-                author_image = author["photo"]
+            if author is None:
+                flash("Author not found", "error")
+                return redirect(url_for("library"))
 
+            if author["image"]:
+                image_paths.append(author["image"])
+
+            # Get images of books belonging to this author
             cursor.execute(
-                "SELECT cover_image FROM BOOK WHERE author_id = %s",
+                "SELECT image FROM BOOK WHERE author_id = %s",
                 (author_id,)
             )
             books = cursor.fetchall()
 
-            book_images = [
-                book["cover_image"]
-                for book in books
-                if book["cover_image"]
-            ]
+            for book in books:
+                if book["image"]:
+                    image_paths.append(book["image"])
 
-            # Delete books before deleting the author.
+            # Delete the author's books first
             cursor.execute(
                 "DELETE FROM BOOK WHERE author_id = %s",
                 (author_id,)
             )
 
+            # Then delete the author
             cursor.execute(
                 "DELETE FROM AUTHOR WHERE author_id = %s",
                 (author_id,)
@@ -931,26 +966,26 @@ def delete_author(author_id):
 
         connection.commit()
 
-    except Exception:
-        connection.rollback()
-        raise
+    except pymysql.MySQLError as error:
+        if connection:
+            connection.rollback()
+
+        print("DELETE AUTHOR DATABASE ERROR:", error)
+        flash("Could not delete author", "error")
+        return redirect(url_for("library"))
 
     finally:
-        connection.close()
+        if connection:
+            connection.close()
 
-    for image_path in book_images:
+    # Delete the saved image files after database deletion
+    for image_path in image_paths:
         delete_image(image_path)
 
-    if author_image:
-        delete_image(author_image)
-
-    flash("Author and their books deleted successfully", "success")
+    flash("Author and related books deleted successfully", "success")
     return redirect(url_for("library"))
 
 
-# =================================================
-# RUN FLASK
-# =================================================
 
 if __name__ == "__main__":
     app.run(debug=True)
